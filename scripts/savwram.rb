@@ -8,10 +8,8 @@ repo = case sym_name
   else sym_name
 end
 
-valid_repos = ["pokered","pokeyellow","pokegold","pokecrystal"]
+valid_repos = ["pokered", "pokeyellow", "pokegold", "pokecrystal"]
 abort usage_str unless valid_repos.include? repo
-
-puts format("Outputting to %s.txt", repo)
 
 class SavWram
   def initialize(repo)
@@ -26,7 +24,7 @@ class SavWram
   def load_sym(path)
     @sram = {}
     @wram = {}
-    
+
     File.open(path, "r") do |file|
       file.readlines.each do |line|
         line = line.split(";", 2)[0].strip
@@ -52,27 +50,23 @@ class SavWram
   end
 
   def make()
+    # hardcode some stuff for the main logic to work
     case @repo
-      when "pokered", "pokeyellow" then rby_make()
-      when "pokegold", "pokecrystal" then gsc_make()
+    when "pokered", "pokeyellow"
+      w_start_prefix = "Start"
+      s_sections = ["PlayerName", "MainData", "SpriteData", "PartyData", "BoxData", "TilesetType"]
+      rby_ws_hardcodes()
+    when "pokegold", "pokecrystal"
+      w_start_prefix = ""
+      s_sections = ["Options", "GameData", "CrystalData"]
+      gsc_ws_hardcodes()
+    else
+      raise ArgumentError.new(format("Invalid repo (%s). Expected one of poke[red|yellow|gold|crystal].", @repo))
     end
-  end
 
-  def rby_make()
-    wPlayerNameAddr = @wram["wPlayerName"]
-    @wram["wPlayerNameStart"] = wPlayerNameAddr
-    wPlayerNameEndAddr = @wram["wPlayerNameStart"] + 11
-    @wram["wPlayerNameEnd"] = wPlayerNameEndAddr
-    wSavedTilesetTypeAddr = @wram["wSavedTilesetType"]
-    @wram["wTilesetTypeStart"] = wSavedTilesetTypeAddr
-    wTilesetTypeEndAddr = @wram["wTilesetTypeStart"] + 1
-    @wram["wTilesetTypeEnd"] = wTilesetTypeEndAddr
-
-    @sram["sBoxData"] = @sram["sCurBoxData"]
-
-    ["PlayerName", "MainData", "SpriteData", "PartyData", "BoxData", "TilesetType"].each do |section|
-      w = "w" + section + "Start"
-
+    # common code to write the "wram/sav address" mappings for rby+gsc
+    s_sections.each do |section|
+      w = "w" + section + w_start_prefix
       next unless @wram[w]
 
       w_end = "w" + section + "End"
@@ -86,34 +80,33 @@ class SavWram
     end
   end
 
-  def gsc_make()
+  def rby_ws_hardcodes()
+    # wram/sram hardcodes
+    @wram["wPlayerNameStart"] = @wram["wPlayerName"]
+    @wram["wPlayerNameEnd"] = @wram["wPlayerNameStart"] + 11
+    @wram["wTilesetTypeStart"] = @wram["wSavedTilesetType"]
+    @wram["wTilesetTypeEnd"] = @wram["wTilesetTypeStart"] + 1
+    @sram["sBoxData"] = @sram["sCurBoxData"]
+  end
+
+  def gsc_ws_hardcodes()
+    # wram/sram hardcodes
     @sram["sOptions"] = sav_addr(0x01, 0xA000)
     @sram["sGameData"] = sav_addr(0x01, 0xA009)
-
-    ["Options", "GameData", "CrystalData"].each do |section|
-      w = "w" + section
-
-      next unless @wram[w]
-
-      w_end = w + "End"
-      s_base = @sram["s" + section]
-
-      (@wram[w]...@wram[w_end]).each do |w_addr|
-        w_loc = get_label(w_addr)
-        s_addr = s_base + w_addr - @wram[w]
-        print(format("\n%s = %04X (%04X)", w_loc, w_addr, s_addr))
-      end
-    end
   end
-  
+
   def get_label(addr)
+    # get the lowest-level label for the address
     floor = addr.downto(0) { |n| break n if @wram.has_key?(n) }
     "#{format("%04X", addr - floor)}+#{@wram[floor]}"
   end
 end
 
-File.open(File.join(__dir__, repo + '.txt'), 'w') do |out_txt|
-  $stdout = out_txt
+out_basename = repo + ".txt"
+puts "Outputting to " + out_basename
+
+File.open(File.join(__dir__, out_basename), "w") do |out_file|
+  $stdout = out_file
   puts "wram label = wram addr (sav addr)\n"
-  SavWram.new(sym_name).make()
+  SavWram.new(repo).make()
 end
