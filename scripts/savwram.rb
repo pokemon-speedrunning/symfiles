@@ -66,16 +66,16 @@ class SavWram
 
     # common code to write the "wram/sav address" mappings for rby+gsc
     s_sections.each do |section|
-      w = "w" + section + w_start_prefix
-      next unless @wram[w]
+      w_start_label = "w" + section + w_start_prefix
+      next unless @wram[w_start_label]
 
-      w_end = "w" + section + "End"
+      w_end_label = "w" + section + "End"
       s_base = @sram["s" + section]
 
-      (@wram[w]...@wram[w_end]).each do |w_addr|
-        w_loc = get_label(w_addr)
-        s_addr = s_base + w_addr - @wram[w]
-        print(format("\n%s = %04X (%04X)", w_loc, w_addr, s_addr))
+      (@wram[w_start_label]...@wram[w_end_label]).each do |w_addr|
+        w_label = get_label(w_addr)
+        s_addr = s_base + w_addr - @wram[w_start_label]
+        print(format("\n%s = %04X (%04X)", w_label, w_addr, s_addr))
       end
     end
   end
@@ -102,10 +102,10 @@ class SavWram
   end
 end
 
-out_basename = repo + ".txt"
-puts "Outputting to " + out_basename
+out_name = repo + ".txt"
+puts "Outputting to " + out_name
 
-File.open(File.join(__dir__, out_basename), "w") do |out_file|
+File.open(File.join(__dir__, out_name), "w") do |out_file|
   $stdout = out_file
   puts "wram label = wram addr (sav addr)\n"
   SavWram.new(repo).make()
