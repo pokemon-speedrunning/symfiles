@@ -105,7 +105,7 @@ end
 out_name = repo + ".txt"
 puts "Outputting to #{out_name}"
 
-File.open(File.join(__dir__, out_name), "w") do |out_file|
+File.open(File.join(__dir__, "out", out_name), "w") do |out_file|
   $stdout = out_file
   puts "wram label = wram addr (sav addr)"
   puts
