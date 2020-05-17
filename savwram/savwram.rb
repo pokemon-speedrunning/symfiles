@@ -24,6 +24,7 @@ class SavWram
   def load_sym(path)
     @sram = {}
     @wram = {}
+    @suffix_blacklist = ["End", "Struct", "Object"]
 
     File.open(path, "r") do |file|
       file.readlines.each do |line|
@@ -42,7 +43,9 @@ class SavWram
         when 0xC000..0xDFFF
           if bank < 2
             @wram[line[1]] = addr
-            @wram[addr] = line[1]
+            unless @wram.has_key?(addr) && @suffix_blacklist.any? { |suffix| line[1].end_with?(suffix) }
+              @wram[addr] = line[1]
+            end
           end
         end
       end
@@ -57,7 +60,6 @@ class SavWram
       w_start_prefix = "Start"
       s_section_names = ["PlayerName", "MainData", "SpriteData", "PartyData", "BoxData", "TilesetType"]
     when "pokegold", "pokecrystal"
-      add_gsc_hardcodes
       w_start_prefix = ""
       s_section_names = ["Options", "GameData", "CrystalData"]
     else
@@ -75,7 +77,7 @@ class SavWram
       (@wram[w_start_label]...@wram[w_end_label]).each do |w_addr|
         w_label = get_label(w_addr)
         s_addr = s_base_addr + w_addr - @wram[w_start_label]
-        puts format("%s = %04X (%04X)", w_label, w_addr, s_addr)
+        puts format("%s = %04x (%04x)", w_label, w_addr, s_addr)
       end
     end
   end
@@ -89,16 +91,10 @@ class SavWram
     @sram["sBoxData"] = @sram["sCurBoxData"]
   end
 
-  def add_gsc_hardcodes
-    # wram/sram hardcodes
-    @sram["sOptions"] = sav_addr(0x01, 0xA000)
-    @sram["sGameData"] = sav_addr(0x01, 0xA009)
-  end
-
   def get_label(addr)
     # get the lowest-level label for the address
     floor = addr.downto(0) { |n| break n if @wram.has_key?(n) }
-    format("%04X+%s", addr - floor, @wram[floor])
+    format("%04x+%s", addr - floor, @wram[floor])
   end
 end
 
