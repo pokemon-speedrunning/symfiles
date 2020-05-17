@@ -21,10 +21,21 @@ class SavWram
     bank * 0x2000 + (addr - 0xA000)
   end
 
+  def blacklisted?(label)
+    @wram_blacklist.include?(label) ||
+        @prefix_blacklist.any? { |prefix| label.start_with?(prefix) } ||
+        @suffix_blacklist.any? { |suffix| label.end_with?(suffix)   }
+  end
+
   def load_sym(path)
     @sram = {}
     @wram = {}
-    @suffix_blacklist = ["End", "Struct", "Object"]
+    @prefix_blacklist = ["wDude", "wPlayerData", "wEndPokedex"]
+    @suffix_graylist = ["End", "Struct", "Object"]
+    @suffix_blacklist = ["CaughtLocation", "CaughtLevel", "CaughtTime", "CaughtGender"]
+    @wram_blacklist = ["wGameData", "wCurMapData", "wBoxMons", "wEggMon",
+        "wRoamMon1", "wRoamMon2", "wRoamMon3", "wPartyMons",
+        "wPartyMon1", "wPartyMon2", "wPartyMon3", "wPartyMon4", "wPartyMon5", "wPartyMon6"]
 
     File.open(path, "r") do |file|
       file.readlines.each do |line|
@@ -36,15 +47,18 @@ class SavWram
         info = line[0].split(":", 2)
         bank = info[0].to_i(16)
         addr = info[1].to_i(16)
+        label = line[1]
         
         case addr
         when 0xA000..0xBFFF
-          @sram[line[1]] = sav_addr(bank, addr)
+          @sram[label] = sav_addr(bank, addr)
         when 0xC000..0xDFFF
           if bank < 2
-            @wram[line[1]] = addr
-            unless @wram.has_key?(addr) && @suffix_blacklist.any? { |suffix| line[1].end_with?(suffix) }
-              @wram[addr] = line[1]
+            @wram[label] = addr
+            unless @wram.has_key?(addr) && @suffix_graylist.any? { |suffix| label.end_with?(suffix) }
+              unless blacklisted?(label)
+                @wram[addr] = label
+              end
             end
           end
         end
