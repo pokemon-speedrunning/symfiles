@@ -10575,7 +10575,7 @@
 13:7e01 _GivePokemon.addToParty
 13:7e11 SetPokedexOwnedFlag
 13:7e39 GotMonText
-13:7e3f SetToBoxText
+13:7e3f SentToBoxText
 13:7e44 BoxIsFullText
 13:7e49 GetPredefPointer
 13:7e6b GetPredefPointer.nocarry
@@ -18421,7 +18421,7 @@
 29:414e _CannotUseItemsHereText
 29:4168 _CannotGetOffHereText
 29:4180 _GotMonText
-29:418f _SetToBoxText
+29:418f _SentToBoxText
 29:41d6 _BoxIsFullText
 29:4245 _OakAppearsText
 29:4264 _OakWalksUpText
