@@ -11,3 +11,5 @@ The repository also contains a ruby script for generating wram to `.sav` address
 * [Yellow](/savwram/out/pokeyellow.txt)
 * [Gold/Silver](/savwram/out/pokegold.txt)
 * [Crystal](/savwram/out/pokecrystal.txt)
+
+*(Update: As of 21 Jun 2020, pokecrystal and pokegold both automatically push `.sym` files to the `symbols` branch on any code changes. See [here](https://github.com/pret/pokecrystal/tree/symbols) for pokecrystal, and [here](https://github.com/pret/pokegold/tree/symbols) for pokegold. I'll still update those files, since I prefer having all symbols in the `.sym` for debugging purposes, and since there's no other central access point for the `.sym` files currently.)*
