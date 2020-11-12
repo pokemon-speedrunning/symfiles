@@ -30,25 +30,32 @@ class SavWram
   def load_sym(path)
     @sram = {}
     @wram = {}
-    @prefix_blacklist = ["wDude", "wPlayerData", "wEndPokedex"]
+    @prefix_blacklist = ["wDude", "wPlayerData", "wEndPokedex", "wPikaPic", "wCurPikaPic"]
     @suffix_graylist = ["End", "Struct", "Object"]
-    @suffix_blacklist = ["CaughtLocation", "CaughtLevel", "CaughtTime", "CaughtGender"]
+    @suffix_blacklist = ["CaughtLocation", "CaughtLevel", "CaughtTime", "CaughtGender",
+        "StateData1", "StateData2"]
+    # TODO: time to use regexes
     @wram_blacklist = ["wGameData", "wCurMapData", "wBoxMons", "wEggMon",
         "wRoamMon1", "wRoamMon2", "wRoamMon3", "wPartyMons",
-        "wPartyMon1", "wPartyMon2", "wPartyMon3", "wPartyMon4", "wPartyMon5", "wPartyMon6"]
+        "wPartyMon1", "wPartyMon2", "wPartyMon3", "wPartyMon4", "wPartyMon5", "wPartyMon6",
+        "wEnemyMon1", "wEnemyMon2", "wEnemyMon3", "wEnemyMon4", "wEnemyMon5", "wEnemyMon6",
+        "wEnemyMon1Type", "wEnemyMon2Type", "wEnemyMon3Type",
+        "wEnemyMon4Type", "wEnemyMon5Type", "wEnemyMon6Type",
+        "wPartyMon2Type", "wPartyMon3Type", "wPartyMon4Type", "wPartyMon6Type",
+        "wGameProgressFlags", "wBoxMon1", "wBoxMon1Type", "wBreedMon2"]
 
     File.open(path, "r") do |file|
       file.readlines.each do |line|
         line = line.split(";", 2)[0].strip
-        
+
         next if line == ""
-        
+
         line = line.split(" ", 2)
         info = line[0].split(":", 2)
         bank = info[0].to_i(16)
         addr = info[1].to_i(16)
         label = line[1]
-        
+
         case addr
         when 0xA000..0xBFFF
           @sram[label] = sav_addr(bank, addr)
